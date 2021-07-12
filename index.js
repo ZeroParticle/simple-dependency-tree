@@ -37,6 +37,11 @@ function generateVersionId() {
     return idString;
 }
 
+/**
+ * Calculates compatibility for a product based on its versions and the version's dependencies.
+ * @param {string} productId ID of the product.
+ * @returns An array of specs that describes the specs that this product is compatible with.
+ */
 function calculateCompatibility(productId) {
     const product = products[productId];
     const compatibilities = product.versions.reduce((acc, versionId) => {
@@ -52,7 +57,14 @@ function calculateCompatibility(productId) {
     return _.union(...compatibilities);
 }
 
-function setCompatibility(productId, newCompats, updated = {},) {
+/**
+ * Sets the compatibility for a product to some update spec array. Does not determine the validity of the array.
+ * All versions which depend on this product will be retrieved and their parent product will have it's compatibility recalculated.
+ * @param {string} productId The product ID of the product to be updated.
+ * @param {array} newCompats An array of specs describing the new compatibility of passed product ID
+ * @param {object} updated An object that hold productId:boolean, describing if the associated product ID has had its compatibility recalculated.
+ */
+function setCompatibility(productId, newCompats, updated = {}) {
     products[productId].compatible = newCompats;
     updated[productId] = true;
     if (debug) console.log(`Updated ${productId}`, products[productId].compatible, updated);
@@ -68,6 +80,16 @@ function setCompatibility(productId, newCompats, updated = {},) {
     if (debug) console.log(updated);
 }
 
+/**
+ * Creates or updates a version and adds it to the product. If the version includes specs that its dependencies do not support, the process will exist.
+ * The passed dependencies must be compatibile with all specs in the supports array. The parent product will have its compatibility updated and will trigger
+ * a recalculation of compatibilities for all dependencies.
+ * @param {string} productId The product ID of the product to be used as the parent for the version
+ * @param {string} versionId The version ID to be used. Null or undefined will cause an ID to be generated.
+ * @param {array} supports An array of specs that this version wishes to support.
+ * @param {array} dependencies The dependencies for this version.
+ * @returns The new version id
+ */
 function putVersion(productId, versionId, supports, dependencies) {
     if (debug) console.log("---------------------------------------------------------------------------------------------------------------");
     const verId = versionId || generateVersionId();
@@ -93,6 +115,10 @@ function putVersion(productId, versionId, supports, dependencies) {
     return verId;
 }
 
+/**
+ * Creates a new product.
+ * @returns A new product ID
+ */
 function createProduct() {
     const id = generateProductId();
     products[id] = {
@@ -102,6 +128,9 @@ function createProduct() {
     return id;
 }
 
+/**
+ * Resets the DB and debug setting.
+ */
 function reset() {
     debug = false;
     prodId = 0;
@@ -110,12 +139,20 @@ function reset() {
     versions = {};
 }
 
+/**
+ * Logs DB info.
+ */
 function logInfo() {
     console.log("---------------------------------------------------------------------------------------------------------------")
     console.log(products);
     console.log(versions);
 }
 
+/**
+ * Validates that the db state matches the expected state and ensures that all recorded compatibilites match the actual calculated compatibilities.
+ * @param {*} expected the expected DB state as a single object.
+ * @returns A result string.
+ */
 function validate(expected) {
     if (debug) logInfo();
     for (let product in products) {
