@@ -81,7 +81,7 @@ function setCompatibility(productId, newCompats, updated = {}) {
 }
 
 /**
- * Creates or updates a version and adds it to the product. If the version includes specs that its dependencies do not support, the process will exist.
+ * Creates or updates a version and adds it to the product. If the version includes specs that its dependencies do not support, the method will return without creating the version.
  * The passed dependencies must be compatibile with all specs in the supports array. The parent product will have its compatibility updated and will trigger
  * a recalculation of compatibilities for all dependencies.
  * @param {string} productId The product ID of the product to be used as the parent for the version
